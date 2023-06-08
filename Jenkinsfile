@@ -7,43 +7,34 @@ pipeline {
         artifact_registry = 'us-central1-docker.pkg.dev'
         service_name = 'pythonapp'
         repo = 'jenkins-repo'
-        workdir = 'app'
     }
     stages {
         stage('Preparando el entorno') {
             steps {
                 sh 'echo Instalando dependencias del contenedor'
-                dir(workdir) {
-                    sh 'python3 -m pip install -r requirements.txt'
-                }
+                sh 'python3 -m pip install -r requirements.txt'
             }
         }
         
         stage('Calidad de código') {
             steps {
                 sh 'echo Testeando la calidad del código'
-                dir(workdir) {
-                    sh 'python3 -m pylint app.py > pylint_report.txt'
-                    sh 'cat pylint_report.txt'
-                }
+                sh 'python3 -m pylint app.py > pylint_report.txt'
+                sh 'cat pylint_report.txt'
             }
         }
 
         stage('Tests') {         
             steps {
                 sh 'echo Testeando la aplicación'
-                dir(workdir) {
-                    sh 'python3 -m pytest'
-                }
+                sh 'python3 -m pytest'
             }
         }
 
         stage('Construcción del artefacto') {
             steps {
                 sh 'echo Construyendo la imágen de docker'
-                dir(workdir) {
-                    sh 'docker build . -t ${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}'
-                }
+                sh 'docker build . -t ${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}'
             }
         }
 
