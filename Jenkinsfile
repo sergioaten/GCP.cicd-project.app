@@ -42,6 +42,7 @@ pipeline {
 
         stage('Subir artefacto a repo') {
             steps {
+                sh 'echo GOOGLE_CREDENTIALS'
                 sh 'echo Subiendo la imágen de docker al "Artifact Registry" de Google Cloud'
                 sh 'gcloud auth configure-docker ${artifact_registry} --quiet'
                 sh 'docker push ${dockerimg_name}'
