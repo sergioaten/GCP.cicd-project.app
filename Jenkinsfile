@@ -4,8 +4,8 @@ pipeline {
     }
     environment {
         test_env = false
-        test_credentialss = credentials('gcp-cloudrun-json')
-        prod_credentialss = credentials('gcp-cloudrun-json-test')
+        test_credentialss = credentials('gcp-cloudrun-json-test')
+        prod_credentialss = credentials('gcp-cloudrun-json')
         artifact_registry = 'us-central1-docker.pkg.dev'
         service_name = 'api-app'
         repo = 'jenkins-repo'
