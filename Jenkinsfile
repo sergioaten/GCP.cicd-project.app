@@ -3,7 +3,7 @@ pipeline {
         label "agent"; 
     }
     environment {
-        def test_env = true
+        def test_env = false
         test_credentials = credentials('gcp-cloudrun-json-test')
         prod_credentials = credentials('gcp-cloudrun-json')
         artifact_registry = 'us-central1-docker.pkg.dev'
