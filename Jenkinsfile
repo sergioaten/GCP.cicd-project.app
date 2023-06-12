@@ -3,6 +3,7 @@ pipeline {
         label "agent"; 
     }
     environment {
+        test_env = true
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-cloudrun-json')
         project_id = sh(script: 'gcloud config get-value project', returnStdout: true).trim()
         artifact_registry = 'us-central1-docker.pkg.dev'
@@ -13,6 +14,7 @@ pipeline {
     stages {
         stage('Preparando el entorno') {
             steps {
+                sh 'echo $test_env'
                 sh 'echo Comprobando si docker está instalado en la máquina'
                 sh 'docker version'
                 sh 'echo Instalando dependencias python'
