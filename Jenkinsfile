@@ -4,8 +4,7 @@ pipeline {
     }
     environment {
         test_env = false
-        test_credentials = "test"
-        //test_credentials = credentials('gcp-cloudrun-json-test')
+        test_credentials = credentials('gcp-cloudrun-json-test')
         prod_credentials = credentials('gcp-cloudrun-json')
         artifact_registry = 'us-central1-docker.pkg.dev'
         service_name = 'api-app'
@@ -16,10 +15,10 @@ pipeline {
             steps {
                 script {
                     if (test_env) {
-                        echo "El contenedor está en ejecución. Se actualizará la imagen."
+                        echo "Cargando credentiales de entorno de pruebas."
                         env.GOOGLE_APPLICATION_CREDENTIALS = $test_credentials
                     } else {
-                        echo "El contenedor no está en ejecución. Se realizará el despliegue del servicio."
+                        echo "Cargando credentiales de entorno de producción."
                         env.GOOGLE_APPLICATION_CREDENTIALS = $prod_credentials
                     }
                     env.project_id = sh(script: 'gcloud config get-value project', returnStdout: true).trim()
