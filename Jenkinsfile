@@ -8,7 +8,6 @@ pipeline {
         service_name = 'pythonapp'
         repo = 'jenkins-repo'
         dockerimg_name = "${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}"
-        test = 'nada'
     }
     stages {
         stage('Preparando el entorno') {
