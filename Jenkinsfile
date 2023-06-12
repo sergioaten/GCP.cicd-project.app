@@ -5,15 +5,15 @@ pipeline {
     environment {
         project_id = sh(script: 'gcloud config get-value project', returnStdout: true).trim()
         artifact_registry = 'us-central1-docker.pkg.dev'
-        service_name = 'pythonapp'
+        service_name = 'api-app'
         repo = 'jenkins-repo'
         dockerimg_name = "${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}"
     }
     stages {
         stage('Preparando el entorno') {
             steps {
-                sh 'echo Instalando dependencias del contenedor'
-                sh 'python3 -m pip install -r requirements.txt'
+                sh 'echo Comprobando si docker está instalado en la máquina'
+                sh 'docker version'
             }
         }
         
