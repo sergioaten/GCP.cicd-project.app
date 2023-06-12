@@ -3,17 +3,30 @@ pipeline {
         label "agent"; 
     }
     environment {
-        test_env = true
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-cloudrun-json')
-        project_id = sh(script: 'gcloud config get-value project', returnStdout: true).trim()
+        test_env = false
+        test_creds = credentials('gcp-cloudrun-json')
+        prod_creds = credentials('gcp-cloudrun-json-test')
         artifact_registry = 'us-central1-docker.pkg.dev'
         service_name = 'api-app'
         repo = 'jenkins-repo'
-        dockerimg_name = "${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}"
+        
     }
     stages {
         stage('Preparando el entorno') {
             steps {
+                script {
+                    def containerRunning = test_env
+
+                    if (test_env) {
+                        echo "El contenedor está en ejecución. Se actualizará la imagen."
+                        env.GOOGLE_APPLICATION_CREDENTIALS = $test_creds
+                        env.project_id = sh(script: 'gcloud config get-value project', returnStdout: true).trim()
+                        env.dockerimg_name = "${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}"
+                    } else {
+                        echo "El contenedor no está en ejecución. Se realizará el despliegue del servicio."
+                        sh("gcloud run deploy ${service_name} --image=\"${dockerimg_name}\" --region=\"us-central1\" --port=5000")
+                    }
+                }
                 sh 'echo $test_env'
                 sh 'echo Comprobando si docker está instalado en la máquina'
                 sh 'docker version'
