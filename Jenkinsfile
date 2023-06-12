@@ -3,7 +3,7 @@ pipeline {
         label "agent"; 
     }
     environment {
-        GOOGLE_CREDENTIALS = credentials('gcp-cloudrun-json')
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-cloudrun-json')
         project_id = sh(script: 'gcloud config get-value project', returnStdout: true).trim()
         artifact_registry = 'us-central1-docker.pkg.dev'
         service_name = 'api-app'
