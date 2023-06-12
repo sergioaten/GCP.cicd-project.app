@@ -15,6 +15,8 @@ pipeline {
             steps {
                 sh 'echo Comprobando si docker está instalado en la máquina'
                 sh 'docker version'
+                sh 'Instalando dependencias python'
+                sh 'pip install -r requirements.txt'
             }
         }
         
