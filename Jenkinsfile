@@ -3,7 +3,7 @@ pipeline {
         label "agent"; 
     }
     environment {
-        test_env = false
+        test_env = true
         test_credentials = credentials('gcp-cloudrun-json-test')
         prod_credentials = credentials('gcp-cloudrun-json')
         artifact_registry = 'us-central1-docker.pkg.dev'
@@ -13,6 +13,7 @@ pipeline {
     stages {
         stage('Preparando el entorno') {
             steps {
+                sh 'echo $test_env'
                 script {
                     if (test_env) {
                         echo "Cargando credentiales de entorno de pruebas."
