@@ -2,6 +2,7 @@ pipeline {
     agent {
         label "agent"; 
     }
+
     environment {
         BRANCH_NAME = "${GIT_BRANCH.split("/")[1]}"
         test_credentials = credentials('gcp-cloudrun-json-test')
@@ -43,16 +44,15 @@ pipeline {
             }
         }
 
-        
         stage('Calidad de código') {
             steps {
-                sh 'echo Testeando la calidad del códigos'
+                sh 'echo Testeando la calidad del código'
                 sh 'python3 -m pylint app.py > pylint_report.txt'
                 sh 'cat pylint_report.txt'
             }
         }
 
-        stage('Tests') {         
+        stage('Tests') {
             steps {
                 sh 'echo Testeando la aplicación'
                 sh 'python3 -m pytest'
@@ -61,16 +61,20 @@ pipeline {
 
         stage('Construcción del artefacto') {
             steps {
-                sh 'echo Construyendo la imágen de docker'
-                sh 'docker build . -t ${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}'
+                sh 'echo Construyendo la imagen de Docker'
+                sh 'docker build . -t ${dockerimg_name}'
+                script {
+                    echo "Obteniendo el puerto que utiliza la imágen para usarlo en el despliegue"
+                    env.port = sh(script: "docker inspect --format='{{range \$p, \$conf := .Config.ExposedPorts}} {{\$p}} {{end}}' ${dockerimg_name} | grep -oE '[0-9]+'", returnStdout: true).trim()
+                }
             }
         }
 
         stage('Subir artefacto a repo') {
             steps {
-                sh 'echo Subiendo la imágen de docker al "Artifact Registry" de Google Cloud'
+                sh 'echo Subiendo la imagen de Docker al "Artifact Registry" de Google Cloud'
                 sh 'gcloud auth configure-docker ${artifact_registry} --quiet'
-                sh 'docker push ${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}'
+                sh 'docker push ${dockerimg_name}'
             }
         }
 
@@ -78,19 +82,20 @@ pipeline {
             steps {
                 sh 'echo Testearemos si la aplicación está ya levantada para actualizar la versión de la imagen, sino, desplegaremos el Cloud Run.'
                 script {
-                    def url = sh(returnStdout: true, script: "gcloud run services describe ${service_name} --format='value(status.url)' --region='us-central1' --project='${project_id}'").trim()
-                    echo "${url}"
-                    def containerRunning = sh(returnStatus: true, script: "${url}") == 0
+                    def containerRunning = sh(returnStatus: true, script: "gcloud run services describe ${service_name} --format='value(status.url)' --region='us-central1' --project='${project_id}'") == 0
+
                     if (containerRunning) {
                         echo "El contenedor está en ejecución. Se actualizará la imagen."
-                        sh("gcloud run services update ${service_name} --image='${dockerimg_name}' --region='us-central1' --port='${port}' --project='${project_id}'")
+                        sh("gcloud run services update ${service_name} --image='${dockerimg_name}' --region='${region}' --port='${port}' --project='${project_id}'")
                     } else {
                         echo "El contenedor no está en ejecución. Se realizará el despliegue del servicio."
-                        sh("gcloud run deploy ${service_name} --image='${dockerimg_name}' --region='us-central1' --port=${port} --project='${project_id}'")
+                        sh("gcloud run deploy ${service_name} --image='${dockerimg_name}' --region='${region}' --port=${port} --project='${project_id}'")
                     }
                     sh 'echo Publicamos el servicio de Cloud Run para todos los usuarios'
-                    sh 'gcloud run services add-iam-policy-binding ${service_name} --member="allUsers" --role="roles/run.invoker" --region="us-central1" --project="${project_id}"'
+                    sh 'gcloud run services add-iam-policy-binding ${service_name} --member="allUsers" --role="roles/run.invoker" --region="${region}" --project="${project_id}"'
                     sh 'echo Realizando test de la aplicación desplegada'
+
+                    def url = sh(script: "gcloud run services describe ${service_name} --format='value(status.url)' --region='${region}' --project='${project_id}'", returnStdout: true).trim()
                     def responseCode = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${url}${test_path_url}", returnStdout: true).trim()
 
                     if (responseCode == '200') {
@@ -102,3 +107,4 @@ pipeline {
             }
         }
     }
+}
