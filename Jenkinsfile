@@ -10,7 +10,7 @@ pipeline {
         artifact_registry = "${region}-docker.pkg.dev"
         service_name = 'api-app'
         repo = 'jenkins-repo'
-        test_path_url = 'osinfo' //Url with "/"
+        test_path_url = '/osinfo' //Url with "/"
     }
 
     stages {
@@ -76,21 +76,29 @@ pipeline {
 
         stage('Desplegando la aplicación') {
             steps {
-                sh 'echo Testearemos si la aplicación está ya levantada para actualizar la versión de la imágen, sino, desplegaremos el cloud run.'
+                sh 'echo Testearemos si la aplicación está ya levantada para actualizar la versión de la imagen, sino, desplegaremos el Cloud Run.'
                 script {
-                    def containerRunning = sh(returnStatus: true, script: "gcloud run services describe ${service_name} --format='value(status.url)' --region=\"us-central1\"") == 0
-
+                    def url = sh(returnStdout: true, script: "gcloud run services describe ${service_name} --format='value(status.url)' --region='us-central1' --project='${project_id}'").trim()
+                    echo "${url}"
+                    def containerRunning = sh(returnStatus: true, script: "${url}") == 0
                     if (containerRunning) {
                         echo "El contenedor está en ejecución. Se actualizará la imagen."
-                        sh("gcloud run services update ${service_name} --image=\"${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}\" --region=\"us-central1\" --port=5000")
+                        sh("gcloud run services update ${service_name} --image='${dockerimg_name}' --region='us-central1' --port='${port}' --project='${project_id}'")
                     } else {
                         echo "El contenedor no está en ejecución. Se realizará el despliegue del servicio."
-                        sh("gcloud run deploy ${service_name} --image=\"${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}\" --region=\"us-central1\" --port=5000")
+                        sh("gcloud run deploy ${service_name} --image='${dockerimg_name}' --region='us-central1' --port=${port} --project='${project_id}'")
                     }
-                }
-                sh 'echo Publicamos el servicio de cloud run para todos los usuarios'
-                sh 'gcloud run services add-iam-policy-binding ${service_name} --member="allUsers" --role="roles/run.invoker" --region="us-central1"'
+                    sh 'echo Publicamos el servicio de Cloud Run para todos los usuarios'
+                    sh 'gcloud run services add-iam-policy-binding ${service_name} --member="allUsers" --role="roles/run.invoker" --region="us-central1" --project="${project_id}"'
+                    sh 'echo Realizando test de la aplicación desplegada'
+                    def responseCode = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${url}${test_path_url}", returnStdout: true).trim()
+
+                    if (responseCode == '200') {
+                        echo 'El test pasó. La respuesta es 200 OK.'
+                    } else {
+                        error 'El test falló. La respuesta no es 200.'
+                    }
+                } 
             }
         }
     }
-}
