@@ -82,7 +82,7 @@ pipeline {
             steps {
                 sh 'echo Testearemos si la aplicación está ya levantada para actualizar la versión de la imagen, sino, desplegaremos el Cloud Run.'
                 script {
-                    def containerRunning = sh(returnStatus: true, script: "gcloud run services describe ${service_name} --format='value(status.url)' --region='us-central1' --project='${project_id}'") == 0
+                    def containerRunning = sh(script: "gcloud run services describe ${service_name} --format='value(status.url)' --region='us-central1' --project='${project_id}'", returnStatus: true) == 0
 
                     if (containerRunning) {
                         echo "El contenedor está en ejecución. Se actualizará la imagen."
