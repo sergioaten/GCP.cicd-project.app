@@ -3,18 +3,46 @@ pipeline {
         label "agent"; 
     }
     environment {
-        project_id = sh(script: 'gcloud config get-value project', returnStdout: true).trim()
-        artifact_registry = 'us-central1-docker.pkg.dev'
-        service_name = 'pythonapp'
+        BRANCH_NAME = "${GIT_BRANCH.split("/")[1]}"
+        test_credentials = credentials('gcp-cloudrun-json-test')
+        prod_credentials = credentials('gcp-cloudrun-json')
+        region = 'us-central1'
+        artifact_registry = "${region}-docker.pkg.dev"
+        service_name = 'api-app'
         repo = 'jenkins-repo'
+        test_path_url = 'osinfo' //Url with "/"
     }
+
     stages {
         stage('Preparando el entorno') {
             steps {
-                sh 'echo Instalando dependencias del contenedor'
+                script {
+                    if (BRANCH_NAME == "dev") {
+                        echo "Cargando credenciales de entorno de pruebas."
+                        env.GOOGLE_APPLICATION_CREDENTIALS = test_credentials
+                    } else if (BRANCH_NAME == "main") {
+                        if (env.BRANCH_NAME.startsWith('PR')) {
+                            echo "Cargando credenciales de entorno de producción."
+                            env.GOOGLE_APPLICATION_CREDENTIALS = prod_credentials
+                        } else {
+                            error "Este cambio no es desde una pull request, por lo que la pipeline no se ejecutará. La rama main solo admitirá correr la pipeline se se hace PR"
+                        }     
+                    } else {
+                        error "El nombre de la rama no es el correcto. Solo pueden ser 'main' o 'test'"
+                    }
+                    env.project_id = sh(script: 'jq -r ".project_id" $GOOGLE_APPLICATION_CREDENTIALS', returnStdout: true).trim()
+                    env.dockerimg_name = "${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}"
+                    service_account_email = sh(script: 'jq -r ".client_email" $GOOGLE_APPLICATION_CREDENTIALS', returnStdout: true).trim()
+                    sh(script: 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS', returnStdout: true).trim()
+                    sh(script: "gcloud config set account ${service_account_email}", returnStdout: true).trim()
+                }
+                sh 'echo Comprobando si Docker está instalado en la máquina'
+                sh 'docker version'
+                sh 'echo Instalando dependencias Python'
                 sh 'python3 -m pip install -r requirements.txt'
             }
         }
+
         
         stage('Calidad de código') {
             steps {
