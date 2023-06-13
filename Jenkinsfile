@@ -18,7 +18,7 @@ pipeline {
         
         stage('Calidad de código') {
             steps {
-                sh 'echo Testeando la calidad del código'
+                sh 'echo Testeando la calidad del códigos'
                 sh 'python3 -m pylint app.py > pylint_report.txt'
                 sh 'cat pylint_report.txt'
             }
