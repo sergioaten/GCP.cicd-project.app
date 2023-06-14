@@ -23,7 +23,7 @@ pipeline {
                         env.GOOGLE_APPLICATION_CREDENTIALS = test_credentials
                     } else if (BRANCH_NAME == "main") {
                         echo "Cargando credenciales de entorno de producción."
-                        env.GOOGLE_APPLICATION_CREDENTIALS = prod_credentials  
+                        env.GOOGLE_APPLICATION_CREDENTIALS = prod_credentials     
                     } else {
                         error "El nombre de la rama no es el correcto. Solo pueden ser 'main' o 'test'"
                     }
