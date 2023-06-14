@@ -25,7 +25,7 @@ pipeline {
                         echo "Cargando credenciales de entorno de producción."
                         env.GOOGLE_APPLICATION_CREDENTIALS = prod_credentials     
                     } else {
-                        error "El nombre de la rama no es el correcto. Solo pueden ser 'main' o 'test'"
+                        error "El nombre de la rama no es el correcto. Solo pueden ser 'main' o 'test'."
                     }
                     env.project_id = sh(script: 'jq -r ".project_id" $GOOGLE_APPLICATION_CREDENTIALS', returnStdout: true).trim()
                     env.dockerimg_name = "${artifact_registry}/${project_id}/${repo}/${service_name}:${GIT_COMMIT}"
