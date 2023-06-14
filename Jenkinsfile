@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     if (BRANCH_NAME == "dev") {
-                        echo "Cargando credenciales de entorno de pruebas.s"
+                        echo "Cargando credenciales de entorno de pruebas."
                         env.GOOGLE_APPLICATION_CREDENTIALS = test_credentials
                     } else if (BRANCH_NAME == "main") {
                         if (env.CHANGE_ID) {
