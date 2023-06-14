@@ -22,7 +22,7 @@ pipeline {
                         echo "Cargando credenciales de entorno de pruebas."
                         env.GOOGLE_APPLICATION_CREDENTIALS = test_credentials
                     } else if (BRANCH_NAME == "main") {
-                        if (env.BRANCH_NAME.startsWith('PR')) {
+                        if (env.CHANGE_ID) {
                             echo "Cargando credenciales de entorno de producción."
                             env.GOOGLE_APPLICATION_CREDENTIALS = prod_credentials
                         } else {
