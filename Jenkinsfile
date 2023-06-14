@@ -22,12 +22,8 @@ pipeline {
                         echo "Cargando credenciales de entorno de pruebas."
                         env.GOOGLE_APPLICATION_CREDENTIALS = test_credentials
                     } else if (BRANCH_NAME == "main") {
-                        if (env.CHANGE_ID) {
-                            echo "Cargando credenciales de entorno de producción."
-                            env.GOOGLE_APPLICATION_CREDENTIALS = prod_credentials
-                        } else {
-                            error "Este cambio no es desde una pull request, por lo que la pipeline no se ejecutará. La rama main solo admitirá correr la pipeline se se hace PR"
-                        }     
+                        echo "Cargando credenciales de entorno de producción."
+                        env.GOOGLE_APPLICATION_CREDENTIALS = prod_credentials  
                     } else {
                         error "El nombre de la rama no es el correcto. Solo pueden ser 'main' o 'test'"
                     }
