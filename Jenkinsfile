@@ -35,6 +35,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Checking requirements') {
             steps {
                 sh 'echo Checking if Docker is installed on the machine'
