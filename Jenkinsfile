@@ -9,7 +9,7 @@ pipeline {
         prod_credentials = credentials('gcp-cloudrun-json') //Load prod credentials
         region = 'us-central1' //Google Cloud Region
         artifact_registry = "${region}-docker.pkg.dev" //Artifact Registry URL
-        service_name = 'example_api' //Service name
+        service_name = 'example-api' //Service name
         repo = 'jenkins-repo' //Artifact Registry repo
         test_path_url = '/osinfo' //Url with "/"
     }
