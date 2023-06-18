@@ -62,7 +62,7 @@ def get_data():
         'architecture' : platform.machine(),
         'python_version' : platform.python_version(),
         'node': platform.node(),
-        'msg': "Mensaje de prueba para testear la integración continua.."
+        'msg': "Mensaje de prueba para testear la integración continua."
     }
 
     # Convert the data to JSON format
